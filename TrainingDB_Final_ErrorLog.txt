@@ -1,0 +1,68 @@
+
+# 🧾 TrainingDB Backup & Restore Full Error Log
+**Prepared by:** Mohammed Yusuf Alkhusaibi  
+**Date:** 2025-05-29  
+
+---
+
+## 🗂 Scenario
+This task tested SQL Server’s full, differential, and log backup/restore process using the `TrainingDB` database. The operation included full backups, inserting data, taking differential and log backups, and simulating disaster recovery.
+
+---
+
+## ❌ Issues Encountered
+
+### 1. **Access Denied on Backup**
+- **Error:** Cannot open backup device. Operating system error 5 (Access is denied).
+- **Fix:** Folder permission was granted to `NT SERVICE\MSSQLSERVER`.
+
+---
+
+### 2. **Restore Failure – Database in Use**
+- **Error:** Exclusive access could not be obtained because the database is in use.
+- **Fix:** Used `ALTER DATABASE TrainingDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE`.
+
+---
+
+### 3. **Restore Chain Mismatch**
+- **Error:** Differential backup cannot be restored because the database has not been restored to the correct earlier state.
+- **Cause:** The differential `.bak` was not tied to the full `.bak` used for restore.
+- **Diagnosis:** Used `RESTORE HEADERONLY` to compare `CheckpointLSN` of full and `DifferentialBaseLSN` of diff. They did not match.
+
+---
+
+## ✅ Final Fix and Clean Test
+
+### 1. Recreated TrainingDB
+- Inserted two initial rows and took a **clean full backup**.
+- Added a third row and took a **clean differential backup**.
+
+### 2. Restored Backups
+```sql
+RESTORE DATABASE TrainingDB FROM DISK = 'CleanFull.bak' WITH NORECOVERY;
+RESTORE DATABASE TrainingDB FROM DISK = 'CleanDiff.bak' WITH RECOVERY;
+```
+
+### 3. Final Verification
+```sql
+SELECT * FROM Students;
+```
+
+**Result:**
+```
+1 | Sara Ali        | 2023-09-01
+2 | Mohammed Nasser | 2023-10-15
+3 | Fatma Said      | 2024-01-10
+```
+
+---
+
+## 📌 Conclusion
+The restore only showed `Fatma Said` after using the correct matching full and differential backup set. Errors during restore usually happen when:
+- `WITH NORECOVERY` is skipped for full
+- Differential is based on another full backup
+- Copy-only backups break the restore chain
+
+---
+
+**Status:** ✅ SUCCESS — Clean backup/restore with full + diff chain.
