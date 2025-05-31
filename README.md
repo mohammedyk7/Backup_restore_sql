@@ -35,7 +35,7 @@ This project includes a set of scripts and documentation I worked on to practice
 3. Use the security script on a sample CompanyDB to simulate user access.
 4. If you're curious about what to expect, open the PDF report for full walkthroughs and screenshots.
 
-## About This Project
+## About This Task
 
 This work was part of a training task focused on real-world database administration skills. It shows how to:
 - Perform controlled backups and restores
